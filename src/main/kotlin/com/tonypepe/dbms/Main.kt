@@ -1,14 +1,12 @@
 package com.tonypepe.dbms
 
-import java.io.File
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
-fun main() {
-    File("./db").mkdir()
-    File("./db/abc").mkdir();
-    File("./db/123").mkdir();
-    File("./db/xyz").mkdir();
-    File("./db/xyz/abc").mkdir();
-    File("./db/").list()?.forEach {
-        println(it)
-    }
+fun main() = runBlocking {
+    launch { Database.startDatabase() }
+    Database.query("select *")
+    Database.query("select name")
+    Database.query("select name teacher")
+    Database.query("select name point")
 }
