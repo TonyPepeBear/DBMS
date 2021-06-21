@@ -32,7 +32,7 @@ object Database {
                 select(q)
             }
             "DELETE" -> {
-                TODO()
+                delete(q)
             }
             "INSERT" -> {
                 insert(q)
@@ -41,6 +41,28 @@ object Database {
                 throw QueryError()
             }
         }
+    }
+
+    private fun delete(q: String): String {
+        val split = q.split(" ")
+        if (split.size > 2) throw QueryError("Too more Args")
+        deleteFromCSV(split[1])
+        return "Deleted ${split[1]}"
+    }
+
+    private fun deleteFromCSV(s: String) {
+        val writer = CSVWriter("db_tmp.csv".toFile().writer())
+        CSVReader("db.csv".toFile().reader()).forEach {
+            var write = true
+            it.forEach { item ->
+                write = write && (item != s)
+            }
+            if (write)
+                writer.writeNext(it)
+        }
+        writer.close()
+        "db.csv".toFile().delete()
+        "db_tmp.csv".toFile().renameTo("db.csv".toFile())
     }
 
     private fun insert(q: String): String {
