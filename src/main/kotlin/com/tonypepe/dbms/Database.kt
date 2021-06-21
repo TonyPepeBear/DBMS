@@ -1,6 +1,7 @@
 package com.tonypepe.dbms
 
 import com.opencsv.CSVReader
+import com.opencsv.CSVWriter
 import kotlinx.coroutines.channels.Channel
 
 object Database {
@@ -9,8 +10,16 @@ object Database {
 
     suspend fun startDatabase() {
         for (receive in queryQueue) {
-            println(startQuery(receive))
+            try {
+                println(startQuery(receive))
+            } catch (e: QueryError) {
+                println("${e.message}\n\tQuery: $receive")
+            }
         }
+    }
+
+    fun closeDatabase() {
+        queryQueue.close()
     }
 
     suspend fun query(q: String) {
@@ -26,12 +35,23 @@ object Database {
                 TODO()
             }
             "INSERT" -> {
-                TODO()
+                insert(q)
             }
             else -> {
                 throw QueryError()
             }
         }
+    }
+
+    private fun insert(q: String): String {
+        val split = q.split(" ")
+        if (split.size < 10) throw QueryError("Less Args")
+        val row = arrayListOf<String>()
+        for (i in 1 until split.size) {
+            row.add(split[i])
+        }
+        write2CSV(row)
+        return "Inserted: ${row.joinToString(separator = " | ")}"
     }
 
     private fun select(q: String): String {
@@ -83,5 +103,16 @@ object Database {
             buffer.append(it.joinToString(postfix = "\n", separator = " | "))
         }
         return buffer.toString()
+    }
+
+    private fun write2CSV(row: List<String>) {
+        val writer = CSVWriter("db_tmp.csv".toFile().writer())
+        CSVReader("db.csv".toFile().reader()).forEach {
+            writer.writeNext(it)
+        }
+        writer.writeNext(row.toTypedArray())
+        writer.close()
+        "db.csv".toFile().delete()
+        "db_tmp.csv".toFile().renameTo("db.csv".toFile())
     }
 }
