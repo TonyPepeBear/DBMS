@@ -5,5 +5,5 @@ import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     launch { Database.startDatabase() }
-    Database.query("delete 企管一甲")
+    Database.query("delete 企管二甲")
 }
