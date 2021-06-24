@@ -77,7 +77,8 @@ object Database {
     }
 
     private fun select(q: String): String {
-        val split = q.split(" ")
+        val split = q.substringBefore(" where ").split(" ")
+        val where = q.substringAfter(" where ").split(" ")
         val selColumn = arrayListOf<Boolean>().apply { repeat(9) { add(false) } }
         if (split[1] == "*") {
             if (split.size > 2) throw QueryError()
@@ -101,20 +102,22 @@ object Database {
                 selColumn[inx] = true
             }
         }
-        val result = selectFromFile(selColumn)
+        val result = selectFromFile(selColumn, where[0])
         return select2String(result)
     }
 
-    private fun selectFromFile(selColumn: ArrayList<Boolean>): List<List<String>> {
+    private fun selectFromFile(selColumn: ArrayList<Boolean>, where: String): List<List<String>> {
         val result = arrayListOf<List<String>>()
         getNewCSVReader().forEach {
             val row = arrayListOf<String>()
-            selColumn.forEachIndexed { i, b ->
-                if (b) {
-                    row.add(it[i])
+            if (where != "" && it[0] == where) {
+                selColumn.forEachIndexed { i, b ->
+                    if (b) {
+                        row.add(it[i])
+                    }
                 }
+                result.add(row)
             }
-            result.add(row)
         }
         return result
     }
